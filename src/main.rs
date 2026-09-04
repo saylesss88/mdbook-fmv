@@ -1,6 +1,7 @@
-use std::path::Path;
+use std::{fs, path::Path};
 
 use clap::Parser;
+use mdbook_fmv::summary::parse_summary;
 
 #[derive(Parser)]
 #[command(name = "fmv", about = "mdBook frontmatter & content validator")]
@@ -22,8 +23,17 @@ fn main() {
         std::process::exit(1);
     }
 
-    let run_fm = cli.fm || !cli.html;
-    let run_html = cli.html || !cli.fm;
+    let summary = match fs::read_to_string("src/SUMMARY.md") {
+        Ok(s) => s,
+        Err(_) => {
+            eprintln!("error: could not read src/SUMMARY.md");
+            std::process::exit(1);
+        }
+    };
 
-    println!("fm: {run_fm}, html: {run_html}");
+    let paths = parse_summary(&summary);
+    println!("found {} chapters", paths.len());
+    for path in &paths {
+        println!("  {path}");
+    }
 }
