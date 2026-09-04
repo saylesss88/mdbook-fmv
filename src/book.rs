@@ -1,7 +1,8 @@
+#[must_use]
 pub fn parse_language(content: &str) -> String {
     for line in content.lines() {
         if line.starts_with("language")
-            && let Some(val) = line.split("=").nth(1)
+            && let Some(val) = line.split('=').nth(1)
         {
             return val.trim().trim_matches('"').to_string();
         }

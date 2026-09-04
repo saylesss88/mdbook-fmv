@@ -1,6 +1,7 @@
 use std::{fs, path::Path};
 
 use clap::Parser;
+use mdbook_fmv::book::parse_language;
 use mdbook_fmv::fm::{Frontmatter, check_frontmatter, fix_frontmatter};
 use mdbook_fmv::git::file_commit_info;
 use mdbook_fmv::html::check_html;
@@ -30,6 +31,13 @@ fn main() {
         std::process::exit(1);
     }
 
+    let Ok(book_toml) = fs::read_to_string("book.toml") else {
+        eprintln!("error: could not read book.toml");
+        std::process::exit(1);
+    };
+
+    let lang = parse_language(&book_toml);
+
     let Ok(summary) = fs::read_to_string("src/SUMMARY.md") else {
         eprintln!("error: could not read src/SUMMARY.md");
         std::process::exit(1);
@@ -38,6 +46,8 @@ fn main() {
     let paths = parse_summary(&summary);
     let run_fm = cli.fm || !cli.html;
     let run_html = cli.html || !cli.fm;
+    // let run_fm = cli.fm || (!cli.fm && !cli.html);
+    // let run_html = cli.html || (!cli.fm && !cli.html);
     let mut total = 0;
 
     for path in &paths {
@@ -78,19 +88,14 @@ fn main() {
 
             let fm = Frontmatter {
                 title,
-                author: commit
-                    .as_ref()
-                    .map(|c| c.author.as_str())
-                    .unwrap_or("Unknown"),
-                date: commit
-                    .as_ref()
-                    .map(|c| c.date.as_str())
-                    .unwrap_or("Unknown"),
+                author: commit.as_ref().map_or("Unknown", |c| c.author.as_str()),
+                date: commit.as_ref().map_or("Unknown", |c| c.date.as_str()),
+                lang: &lang,
             };
 
             let fixed = fix_frontmatter(&content, &fm);
             match fs::write(&full_path, fixed) {
-                Ok(_) => eprintln!("fixed: {full_path}"),
+                Ok(()) => eprintln!("fixed: {full_path}"),
                 Err(e) => eprintln!("error: could not write {full_path}: {e}"),
             }
         }
