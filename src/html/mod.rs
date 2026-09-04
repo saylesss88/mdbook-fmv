@@ -26,4 +26,11 @@ mod tests {
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "html::unclosed-details");
     }
+
+    #[test]
+    fn closed_details_block_produces_no_diagnostics() {
+        let content = "<details>\n<summary>Click me</summary>\n\nSome content.\n</details>\n";
+        let diags = check_html(content);
+        assert!(diags.is_empty());
+    }
 }
