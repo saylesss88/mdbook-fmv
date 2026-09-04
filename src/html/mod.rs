@@ -1,5 +1,6 @@
 use crate::fm::Diagnostic;
 
+#[must_use]
 pub fn check_html(content: &str) -> Vec<Diagnostic> {
     let mut diags = Vec::new();
     diags.extend(check_tag_balance(
@@ -18,13 +19,14 @@ pub fn check_html(content: &str) -> Vec<Diagnostic> {
 fn check_tag_balance(content: &str, tag: &str, code: &'static str) -> Option<Diagnostic> {
     let opens = content.matches(&format!("<{tag}>")).count();
     let closes = content.matches(&format!("</{tag}>")).count();
-    if opens != closes {
+
+    if opens == closes {
+        None
+    } else {
         Some(Diagnostic {
             code,
             message: format!("unclosed <{tag}> block"),
         })
-    } else {
-        None
     }
 }
 

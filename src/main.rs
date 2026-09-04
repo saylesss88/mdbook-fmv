@@ -22,8 +22,8 @@ fn main() {
         std::process::exit(1);
     }
 
-    let run_fm = cli.fm || (!cli.fm && !cli.html);
-    let run_html = cli.html || (!cli.fm && !cli.html);
+    let run_fm = cli.fm || !cli.html;
+    let run_html = cli.html || !cli.fm;
 
     println!("fm: {run_fm}, html: {run_html}");
 }

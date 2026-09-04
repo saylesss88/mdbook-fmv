@@ -1,7 +1,10 @@
+use std::path::Path;
+
 /// Iterate over each line of `SUMMARY.md` as a `&str`
 /// Find every `(something.md)` and return whats inside
 /// `- [Intro](README.md)` -> `README.md`
 /// Filters out section headers like `- [Part One]()`
+#[must_use]
 pub fn parse_summary(content: &str) -> Vec<String> {
     let mut paths = Vec::new();
 
@@ -10,7 +13,10 @@ pub fn parse_summary(content: &str) -> Vec<String> {
             && let Some(end) = line.find(')')
         {
             let path = &line[start + 1..end];
-            if path.ends_with(".md") {
+            if Path::new(path)
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
+            {
                 let path = path.trim_start_matches("./");
                 paths.push(path.to_string());
             }
@@ -35,12 +41,12 @@ mod tests {
         let content = "# Summary\n\n- [Chapter One](./io/input_output.md)\n";
         let paths = parse_summary(content);
         assert_eq!(paths, vec!["io/input_output.md"]);
+    }
 
-        #[test]
-        fn skips_section_headers_with_no_path() {
-            let content = "# Summary\n\n# Error Handling\n- [Chapter](chapter.md)\n";
-            let paths = parse_summary(content);
-            assert_eq!(paths, vec!["chapter.md"]);
-        }
+    #[test]
+    fn skips_section_headers_with_no_path() {
+        let content = "# Summary\n\n# Error Handling\n- [Chapter](chapter.md)\n";
+        let paths = parse_summary(content);
+        assert_eq!(paths, vec!["chapter.md"]);
     }
 }
