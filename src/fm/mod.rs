@@ -55,6 +55,7 @@ pub struct Frontmatter<'a> {
     date: &'a str,
 }
 
+#[must_use]
 pub fn fix_frontmatter(content: &str, fm: &Frontmatter<'_>) -> String {
     let block = format!(
         "---\ntitle: {}\nauthor: {}\ndate: {}\n---\n",
