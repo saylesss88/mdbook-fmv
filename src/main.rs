@@ -37,6 +37,7 @@ fn main() {
     };
 
     let lang = parse_language(&book_toml);
+    eprintln!("debug: lang={lang}");
 
     let Ok(summary) = fs::read_to_string("src/SUMMARY.md") else {
         eprintln!("error: could not read src/SUMMARY.md");
