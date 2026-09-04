@@ -18,4 +18,11 @@ mod tests {
         let lang = parse_language(content);
         assert_eq!(lang, "en");
     }
+
+    #[test]
+    fn missing_language_defaults_to_en() {
+        let content = "[book]\ntitle = \"My Book\"\nauthors = [\"Tom\"]\n";
+        let lang = parse_language(content);
+        assert_eq!(lang, "en");
+    }
 }
