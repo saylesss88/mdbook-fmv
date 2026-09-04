@@ -33,4 +33,12 @@ mod tests {
         let diags = check_html(content);
         assert!(diags.is_empty());
     }
+
+    #[test]
+    fn unclosed_summary_block_produces_diagnostic() {
+        let content = "<details>\n<summary>Click me\n\nSome content.\n</details>\n";
+        let diags = check_html(content);
+        assert_eq!(diags.len(), 1);
+        assert_eq!(diags[0].code, "html::unclosed-summary");
+    }
 }
