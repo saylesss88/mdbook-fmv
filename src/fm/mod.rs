@@ -50,9 +50,9 @@ fn has_field(yaml: &str, field: &str) -> bool {
 }
 
 pub struct Frontmatter<'a> {
-    title: &'a str,
-    author: &'a str,
-    date: &'a str,
+    pub title: &'a str,
+    pub author: &'a str,
+    pub date: &'a str,
 }
 
 #[must_use]
