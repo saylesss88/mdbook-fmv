@@ -1,7 +1,8 @@
 use std::{fs, path::Path};
 
 use clap::Parser;
-use mdbook_fmv::fm::check_frontmatter;
+use mdbook_fmv::fm::{Frontmatter, check_frontmatter, fix_frontmatter};
+use mdbook_fmv::git::file_commit_info;
 use mdbook_fmv::html::check_html;
 use mdbook_fmv::summary::parse_summary;
 
@@ -15,6 +16,10 @@ struct Cli {
     /// Check HTML structure only
     #[arg(long)]
     html: bool,
+
+    /// Automatically fix issues where possible
+    #[arg(long)]
+    fix: bool,
 }
 
 fn main() {
@@ -29,13 +34,6 @@ fn main() {
         eprintln!("error: could not read src/SUMMARY.md");
         std::process::exit(1);
     };
-    // let summary = match fs::read_to_string("src/SUMMARY.md") {
-    //     Ok(s) => s,
-    //     Err(_) => {
-    //         eprintln!("error: could not read src/SUMMARY.md");
-    //         std::process::exit(1);
-    //     }
-    // };
 
     let paths = parse_summary(&summary);
     let run_fm = cli.fm || !cli.html;
@@ -64,6 +62,37 @@ fn main() {
                 diag.code, diag.message, path
             );
             total += 1;
+        }
+
+        if cli.fix && diags.iter().any(|d| d.code == "fm::missing-frontmatter") {
+            let abs_path = std::path::Path::new(&full_path).canonicalize().unwrap();
+            let commit = file_commit_info(&abs_path, "%Y-%m-%d", false)
+                .ok()
+                .flatten();
+
+            let title = path
+                .trim_end_matches(".md")
+                .split('/')
+                .next_back()
+                .unwrap_or("untitled");
+
+            let fm = Frontmatter {
+                title,
+                author: commit
+                    .as_ref()
+                    .map(|c| c.author.as_str())
+                    .unwrap_or("Unknown"),
+                date: commit
+                    .as_ref()
+                    .map(|c| c.date.as_str())
+                    .unwrap_or("Unknown"),
+            };
+
+            let fixed = fix_frontmatter(&content, &fm);
+            match fs::write(&full_path, fixed) {
+                Ok(_) => eprintln!("fixed: {full_path}"),
+                Err(e) => eprintln!("error: could not write {full_path}: {e}"),
+            }
         }
     }
 
