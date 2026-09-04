@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use clap::Parser;
 use mdbook_fmv::book::parse_language;
-use mdbook_fmv::fm::{Frontmatter, check_frontmatter, fix_frontmatter};
+use mdbook_fmv::fm::{Frontmatter, check_frontmatter, fix_frontmatter, fix_missing_lang};
 use mdbook_fmv::git::file_commit_info;
 use mdbook_fmv::html::check_html;
 use mdbook_fmv::summary::parse_summary;
@@ -37,7 +37,6 @@ fn main() {
     };
 
     let lang = parse_language(&book_toml);
-    eprintln!("debug: lang={lang}");
 
     let Ok(summary) = fs::read_to_string("src/SUMMARY.md") else {
         eprintln!("error: could not read src/SUMMARY.md");
@@ -45,10 +44,9 @@ fn main() {
     };
 
     let paths = parse_summary(&summary);
+
     let run_fm = cli.fm || !cli.html;
     let run_html = cli.html || !cli.fm;
-    // let run_fm = cli.fm || (!cli.fm && !cli.html);
-    // let run_html = cli.html || (!cli.fm && !cli.html);
     let mut total = 0;
 
     for path in &paths {
@@ -95,6 +93,14 @@ fn main() {
             };
 
             let fixed = fix_frontmatter(&content, &fm);
+            match fs::write(&full_path, fixed) {
+                Ok(()) => eprintln!("fixed: {full_path}"),
+                Err(e) => eprintln!("error: could not write {full_path}: {e}"),
+            }
+        }
+
+        if cli.fix && diags.iter().any(|d| d.code == "fm::missing-lang") {
+            let fixed = fix_missing_lang(&content, &lang);
             match fs::write(&full_path, fixed) {
                 Ok(()) => eprintln!("fixed: {full_path}"),
                 Err(e) => eprintln!("error: could not write {full_path}: {e}"),
