@@ -55,6 +55,11 @@ fn has_field(yaml: &str, field: &str) -> bool {
     yaml.lines().any(|l| l.starts_with(&format!("{field}:")))
 }
 
+#[must_use]
+pub fn fix_missing_lang(content: &str, lang: &str) -> String {
+    content.replacen("\n---", &format!("\nlang: {lang}\n---"), 1)
+}
+
 pub struct Frontmatter<'a> {
     pub title: &'a str,
     pub author: &'a str,
@@ -150,5 +155,14 @@ mod tests {
         let diags = check_frontmatter(content);
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "fm::missing-lang");
+    }
+
+    #[test]
+    fn fix_missing_lang_injects_into_existing_frontmatter() {
+        let content = "---\ntitle: Hello\nauthor: Tom\ndate: 2026-09-03\n---\n\nSome content.\n";
+        let fixed = fix_missing_lang(content, "en");
+        assert!(fixed.contains("lang: en"));
+        let diags = check_frontmatter(&fixed);
+        assert!(diags.is_empty());
     }
 }
