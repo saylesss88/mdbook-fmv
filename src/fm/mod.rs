@@ -49,6 +49,20 @@ fn has_field(yaml: &str, field: &str) -> bool {
     yaml.lines().any(|l| l.starts_with(&format!("{field}:")))
 }
 
+pub struct Frontmatter<'a> {
+    title: &'a str,
+    author: &'a str,
+    date: &'a str,
+}
+
+pub fn fix_frontmatter(content: &str, fm: &Frontmatter<'_>) -> String {
+    let block = format!(
+        "---\ntitle: {}\nauthor: {}\ndate: {}\n---\n",
+        fm.title, fm.author, fm.date
+    );
+    format!("{block}\n{content}")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -107,7 +121,12 @@ mod tests {
     #[test]
     fn fix_missing_frontmatter_prepends_block() {
         let content = "# Hello\n\nSome content.\n";
-        let fixed = fix_frontmatter(content, "Hello", "Jr", "2026-09-03");
+        let fm = Frontmatter {
+            title: "Hello",
+            author: "Jr",
+            date: "2026-09-03",
+        };
+        let fixed = fix_frontmatter(content, &fm);
         assert!(fixed.starts_with("---\n"));
         assert!(fixed.contains("title: Hello"));
         assert!(fixed.contains("author: Jr"));
