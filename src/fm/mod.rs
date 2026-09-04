@@ -57,7 +57,7 @@ mod tests {
 
     #[test]
     fn missing_date_produces_diagnostic() {
-        let content = "---\ntitle: Hello\nauthor: Tom\n---\n\nSome content.\n";
+        let content = "---\ntitle: Hello\nauthor: Jr\n---\n\nSome content.\n";
         let diags = check_frontmatter(content);
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "fm::missing-date");
@@ -77,5 +77,12 @@ mod tests {
         let diags = check_frontmatter(content);
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "fm::missing-title");
+    }
+
+    #[test]
+    fn valid_frontmatter_produces_no_diagnostics() {
+        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\n---\n\nSome content.\n";
+        let diags = check_frontmatter(content);
+        assert!(diags.is_empty());
     }
 }
