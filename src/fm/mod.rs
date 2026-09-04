@@ -53,13 +53,14 @@ pub struct Frontmatter<'a> {
     pub title: &'a str,
     pub author: &'a str,
     pub date: &'a str,
+    pub lang: &'a str,
 }
 
 #[must_use]
 pub fn fix_frontmatter(content: &str, fm: &Frontmatter<'_>) -> String {
     let block = format!(
-        "---\ntitle: {}\nauthor: {}\ndate: {}\n---\n",
-        fm.title, fm.author, fm.date
+        "---\ntitle: {}\nauthor: {}\ndate: {}\nlang: {}\n---\n",
+        fm.title, fm.author, fm.date, fm.lang
     );
     format!("{block}\n{content}")
 }
@@ -126,6 +127,7 @@ mod tests {
             title: "Hello",
             author: "Jr",
             date: "2026-09-03",
+            lang: "en",
         };
         let fixed = fix_frontmatter(content, &fm);
         assert!(fixed.starts_with("---\n"));
