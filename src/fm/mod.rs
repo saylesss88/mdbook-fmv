@@ -136,4 +136,12 @@ mod tests {
         assert!(fixed.contains("date: 2026-09-03"));
         assert!(fixed.contains("# Hello"));
     }
+
+    #[test]
+    fn missing_lang_produces_diagnostic() {
+        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\n---\n\nSome content.\n";
+        let diags = check_frontmatter(content);
+        assert_eq!(diags.len(), 1);
+        assert_eq!(diags[0].code, "fm::missing-lang");
+    }
 }
