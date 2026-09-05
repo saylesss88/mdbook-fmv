@@ -3,6 +3,14 @@ pub struct Diagnostic {
     pub message: String,
 }
 
+pub struct Frontmatter<'a> {
+    pub title: &'a str,
+    pub author: &'a str,
+    pub date: &'a str,
+    pub lang: &'a str,
+    pub tags: Vec<String>,
+}
+
 #[must_use]
 pub fn check_frontmatter(content: &str) -> Vec<Diagnostic> {
     if !content.starts_with("---") {
@@ -60,17 +68,22 @@ pub fn fix_missing_lang(content: &str, lang: &str) -> String {
     content.replacen("\n---", &format!("\nlang: {lang}\n---"), 1)
 }
 
-pub struct Frontmatter<'a> {
-    pub title: &'a str,
-    pub author: &'a str,
-    pub date: &'a str,
-    pub lang: &'a str,
-}
-
 #[must_use]
 pub fn fix_frontmatter(content: &str, fm: &Frontmatter<'_>) -> String {
+    let tags = if fm.tags.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "tags:\n{}\n",
+            fm.tags
+                .iter()
+                .map(|t| format!("  - {t}"))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    };
     let block = format!(
-        "---\ntitle: {}\nauthor: {}\ndate: {}\nlang: {}\n---\n",
+        "---\ntitle: {}\nauthor: {}\ndate: {}\nlang: {}\n{tags}---\n",
         fm.title, fm.author, fm.date, fm.lang
     );
     format!("{block}\n{content}")
@@ -135,11 +148,14 @@ mod tests {
     #[test]
     fn fix_missing_frontmatter_prepends_block() {
         let content = "# Hello\n\nSome content.\n";
+        let path = "blog/rust/my-post.md";
+        let tags = crate::tags::infer_tags(path);
         let fm = Frontmatter {
             title: "Hello",
             author: "Jr",
             date: "2026-09-03",
             lang: "en",
+            tags,
         };
         let fixed = fix_frontmatter(content, &fm);
         assert!(fixed.starts_with("---\n"));
@@ -147,6 +163,9 @@ mod tests {
         assert!(fixed.contains("author: Jr"));
         assert!(fixed.contains("date: 2026-09-03"));
         assert!(fixed.contains("# Hello"));
+        assert!(fixed.contains("tags:"));
+        assert!(fixed.contains("  - blog"));
+        assert!(fixed.contains("  - rust"));
     }
 
     #[test]

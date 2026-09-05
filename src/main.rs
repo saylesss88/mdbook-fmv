@@ -6,6 +6,7 @@ use mdbook_fmv::fm::{Frontmatter, check_frontmatter, fix_frontmatter, fix_missin
 use mdbook_fmv::git::file_commit_info;
 use mdbook_fmv::html::check_html;
 use mdbook_fmv::summary::parse_summary;
+use mdbook_fmv::tags;
 
 #[derive(Parser)]
 #[command(name = "fmv", about = "mdBook frontmatter & content validator")]
@@ -85,11 +86,13 @@ fn main() {
                 .next_back()
                 .unwrap_or("untitled");
 
+            let tags = tags::infer_tags(path);
             let fm = Frontmatter {
                 title,
                 author: commit.as_ref().map_or("Unknown", |c| c.author.as_str()),
                 date: commit.as_ref().map_or("Unknown", |c| c.date.as_str()),
                 lang: &lang,
+                tags,
             };
 
             let fixed = fix_frontmatter(&content, &fm);
