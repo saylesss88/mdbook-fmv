@@ -70,6 +70,22 @@ fn has_field(yaml: &str, field: &str) -> bool {
 }
 
 #[must_use]
+pub fn fix_missing_tags(content: &str, tags: &[String]) -> String {
+    let tags_yaml = if tags.is_empty() {
+        "tags: []\n".to_string()
+    } else {
+        format!(
+            "tags:\n{}\n",
+            tags.iter()
+                .map(|t| format!("  - {t}"))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    };
+    content.replacen("\n---", &format!("\n{tags_yaml}---"), 1)
+}
+
+#[must_use]
 pub fn fix_missing_lang(content: &str, lang: &str) -> String {
     content.replacen("\n---", &format!("\nlang: {lang}\n---"), 1)
 }
