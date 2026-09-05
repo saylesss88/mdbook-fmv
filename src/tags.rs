@@ -1,3 +1,14 @@
+/// Given a path, return the path segments as a `Vec<String>`
+pub fn infer_tags(path: &str) -> Vec<String> {
+    // split on `/`: `src/blog/rust/my-post.md` ->  ["blog", "rust", "my-post.md"]
+    let segments: Vec<&str> = path.split('/').collect();
+    // drop the filename: ["blog", "rust"]
+    segments[..segments.len() - 1]
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
