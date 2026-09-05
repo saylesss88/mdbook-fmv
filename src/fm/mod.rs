@@ -115,8 +115,6 @@ pub fn fix_frontmatter(content: &str, fm: &Frontmatter<'_>) -> String {
 mod tests {
     use super::*;
 
-    use crate::tags::infer_tags;
-
     #[test]
     fn missing_frontmatter_produces_diagnostic() {
         let content = "# Hello\n\nSome content.\n";
